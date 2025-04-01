@@ -11,6 +11,8 @@
 set -e
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# Compute the project root by going up 4 directories (to reach sbtc-battreverse)
+PROJECT_ROOT=$(realpath "$ROOT/../../../..")
 source $ROOT/utils/print_color.sh
 
 function usage() {
@@ -41,6 +43,7 @@ if [[ ! -z "${CONFIG_IMAGE_KEY}" ]]; then
     IMAGE_KEY=$CONFIG_IMAGE_KEY
 fi
 
+# Initially set ISAAC_ROS_DEV_DIR from environment if available
 ISAAC_ROS_DEV_DIR="${ISAAC_ROS_WS}"
 SKIP_IMAGE_BUILD=0
 VERBOSE=0
@@ -92,19 +95,10 @@ pushd . >/dev/null
 cd $ROOT
 ON_EXIT+=("popd")
 
-# Fall back if isaac_ros_dev_dir not specified
+# Fall back if isaac_ros_dev_dir not specified.
+# Instead of the previous defaults, use the computed project root.
 if [[ -z "$ISAAC_ROS_DEV_DIR" ]]; then
-    ISAAC_ROS_DEV_DIR_DEFAULTS=("$HOME/workspaces/isaac" "/workspaces/isaac" "/mnt/nova_ssd/workspaces/isaac")
-    for ISAAC_ROS_DEV_DIR in "${ISAAC_ROS_DEV_DIR_DEFAULTS[@]}"
-    do
-        if [[ -d "$ISAAC_ROS_DEV_DIR" ]]; then
-            break
-        fi
-    done
-
-    if [[ ! -d "$ISAAC_ROS_DEV_DIR" ]]; then
-        ISAAC_ROS_DEV_DIR=$(realpath "$ROOT/../")
-    fi
+    ISAAC_ROS_DEV_DIR="$PROJECT_ROOT"
     print_warning "isaac not specified, assuming $ISAAC_ROS_DEV_DIR"
 fi
 
@@ -202,7 +196,7 @@ print_info "Launching Isaac ROS Dev container with image key ${BASE_IMAGE_KEY}: 
 # Build image to launch
 if [[ $SKIP_IMAGE_BUILD -ne 1 ]]; then
     print_info "Building $BASE_IMAGE_KEY base as image: $BASE_NAME"
-   $ROOT/build_image_layers.sh --image_key "$BASE_IMAGE_KEY" --image_name "$BASE_NAME"
+    $ROOT/build_image_layers.sh --image_key "$BASE_IMAGE_KEY" --image_name "$BASE_NAME"
 
     # Check result
     if [ $? -ne 0 ]; then
@@ -232,6 +226,48 @@ DOCKER_ARGS+=("-e USER")
 DOCKER_ARGS+=("-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev")
 DOCKER_ARGS+=("-e HOST_USER_UID=`id -u`")
 DOCKER_ARGS+=("-e HOST_USER_GID=`id -g`")
+
+# Mount the cumotion folder from the project root (sbtc-battreverse)
+HOST_KINOVA_PATH="$ISAAC_ROS_DEV_DIR/ros2_kortex"
+CONTAINER_KINOVA_PATH="/workspaces/cumotion/ros2_kortex"
+
+if [[ -d "$HOST_KINOVA_PATH" ]]; then
+    DOCKER_ARGS+=("-v $HOST_KINOVA_PATH:$CONTAINER_KINOVA_PATH")
+    print_info "Mounting host directory '$HOST_KINOVA_PATH' to '$CONTAINER_KINOVA_PATH' in container."
+else
+    print_warning "Host directory '$HOST_KINOVA_PATH' not found. Skipping mount to '$CONTAINER_KINOVA_PATH'."
+fi
+
+HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_ros_cumotion"
+CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_cumotion"
+
+if [[ -d "$HOST_CUMOTION_PATH" ]]; then
+    DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
+    print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
+else
+    # Optional: Warn if the directory doesn't exist on the host
+    print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
+fi
+HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_manipulator"
+CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_manipulator"
+
+if [[ -d "$HOST_CUMOTION_PATH" ]]; then
+    DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
+    print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
+else
+    # Optional: Warn if the directory doesn't exist on the host
+    print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
+fi
+HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_ros_nvblox"
+CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_nvblox"
+
+if [[ -d "$HOST_CUMOTION_PATH" ]]; then
+    DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
+    print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
+else
+    # Optional: Warn if the directory doesn't exist on the host
+    print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
+fi
 
 # Forward SSH Agent to container if the ssh agent is active.
 if [[ -n $SSH_AUTH_SOCK ]]; then
@@ -287,7 +323,6 @@ docker run -it --rm \
     ${DOCKER_ARGS[@]} \
     -v $ISAAC_ROS_DEV_DIR:/workspaces/isaac_ros-dev \
     -v /etc/localtime:/etc/localtime:ro \
-    -v /home/sbtc-develop/documents_ji/cumotion:/workspaces/cumotion \
     --name "$CONTAINER_NAME" \
     --runtime nvidia \
     --entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh \
