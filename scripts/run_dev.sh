@@ -238,8 +238,8 @@ else
     print_warning "Host directory '$HOST_KINOVA_PATH' not found. Skipping mount to '$CONTAINER_KINOVA_PATH'."
 fi
 
-HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_ros_cumotion"
-CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_cumotion"
+HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/cumotion"
+CONTAINER_CUMOTION_PATH="/workspaces/cumotion"
 
 if [[ -d "$HOST_CUMOTION_PATH" ]]; then
     DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
@@ -248,26 +248,7 @@ else
     # Optional: Warn if the directory doesn't exist on the host
     print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
 fi
-HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_manipulator"
-CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_manipulator"
 
-if [[ -d "$HOST_CUMOTION_PATH" ]]; then
-    DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
-    print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
-else
-    # Optional: Warn if the directory doesn't exist on the host
-    print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
-fi
-HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/isaac_ros_nvblox"
-CONTAINER_CUMOTION_PATH="/workspaces/isaac_ros_nvblox"
-
-if [[ -d "$HOST_CUMOTION_PATH" ]]; then
-    DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
-    print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
-else
-    # Optional: Warn if the directory doesn't exist on the host
-    print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
-fi
 
 # Forward SSH Agent to container if the ssh agent is active.
 if [[ -n $SSH_AUTH_SOCK ]]; then
@@ -321,11 +302,10 @@ docker run -it --rm \
     --network host \
     --ipc=host \
     ${DOCKER_ARGS[@]} \
-    -v $ISAAC_ROS_DEV_DIR:/workspaces/isaac_ros-dev \
     -v /etc/localtime:/etc/localtime:ro \
     --name "$CONTAINER_NAME" \
     --runtime nvidia \
     --entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh \
-    --workdir /workspaces/isaac_ros-dev \
+    --workdir /workspaces/cumotion \
     $BASE_NAME \
     /bin/bash

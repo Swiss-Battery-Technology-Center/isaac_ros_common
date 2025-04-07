@@ -467,6 +467,7 @@ RUN chmod +x /usr/local/bin/scripts/*.sh || true
 
 # Copy script additions
 RUN mkdir -p /usr/local/bin/scripts/entrypoint_additions
+COPY scripts/install_cumotion.sh /usr/local/bin/scripts/entrypoint_additions/
 COPY scripts/entrypoint_addition[s]/*.sh /usr/local/bin/scripts/entrypoint_additions/
 RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh || true
 
