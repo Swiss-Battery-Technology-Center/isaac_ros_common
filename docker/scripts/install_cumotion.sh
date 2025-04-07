@@ -1,4 +1,7 @@
 #!/bin/bash
+chown -R admin:admin /workspaces/cumotion || true
+sudo mkdir -p /workspaces/isaac_ros-dev
+sudo chown -R admin:admin /workspaces/isaac_ros-dev
 rosdep update && rosdep install --from-paths /workspaces/cumotion/isaac_ros_cumotion --ignore-src -y
 rosdep update && \
    rosdep install -i -r \

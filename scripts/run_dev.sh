@@ -11,7 +11,6 @@
 set -e
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-# Compute the project root by going up 4 directories (to reach sbtc-battreverse)
 PROJECT_ROOT=$(realpath "$ROOT/../../../..")
 source $ROOT/utils/print_color.sh
 
@@ -21,6 +20,8 @@ function usage() {
 }
 
 DOCKER_ARGS=()
+
+
 
 # Read and parse config file if exists
 #
@@ -227,26 +228,28 @@ DOCKER_ARGS+=("-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev")
 DOCKER_ARGS+=("-e HOST_USER_UID=`id -u`")
 DOCKER_ARGS+=("-e HOST_USER_GID=`id -g`")
 
-# Mount the cumotion folder from the project root (sbtc-battreverse)
-HOST_KINOVA_PATH="$ISAAC_ROS_DEV_DIR/ros2_kortex"
-CONTAINER_KINOVA_PATH="/workspaces/cumotion/ros2_kortex"
 
-if [[ -d "$HOST_KINOVA_PATH" ]]; then
-    DOCKER_ARGS+=("-v $HOST_KINOVA_PATH:$CONTAINER_KINOVA_PATH")
-    print_info "Mounting host directory '$HOST_KINOVA_PATH' to '$CONTAINER_KINOVA_PATH' in container."
-else
-    print_warning "Host directory '$HOST_KINOVA_PATH' not found. Skipping mount to '$CONTAINER_KINOVA_PATH'."
-fi
-
-HOST_CUMOTION_PATH="$ISAAC_ROS_DEV_DIR/cumotion"
+HOST_CUMOTION_PATH="$PROJECT_ROOT/cumotion"
 CONTAINER_CUMOTION_PATH="/workspaces/cumotion"
 
 if [[ -d "$HOST_CUMOTION_PATH" ]]; then
+    print_info "Found host cumotion path: $HOST_CUMOTION_PATH. Adding mount." # ADD THIS LINE
     DOCKER_ARGS+=("-v $HOST_CUMOTION_PATH:$CONTAINER_CUMOTION_PATH")
     print_info "Mounting host directory '$HOST_CUMOTION_PATH' to '$CONTAINER_CUMOTION_PATH' in container."
 else
     # Optional: Warn if the directory doesn't exist on the host
     print_warning "Host directory '$HOST_CUMOTION_PATH' not found. Skipping mount to '$CONTAINER_CUMOTION_PATH'."
+fi
+
+HOST_KINOVA_PATH="$ISAAC_ROS_DEV_DIR/ros2_kortex"
+CONTAINER_KINOVA_PATH="/workspaces/cumotion/ros2_kortex"
+
+if [[ -d "$HOST_KINOVA_PATH" ]]; then
+     print_info "Found host kinova path: $HOST_KINOVA_PATH. Adding mount." # ADD THIS LINE
+    DOCKER_ARGS+=("-v $HOST_KINOVA_PATH:$CONTAINER_KINOVA_PATH")
+    print_info "Mounting host directory '$HOST_KINOVA_PATH' to '$CONTAINER_KINOVA_PATH' in container."
+else
+    print_warning "Host directory '$HOST_KINOVA_PATH' not found. Skipping mount to '$CONTAINER_KINOVA_PATH'."
 fi
 
 
