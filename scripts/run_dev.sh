@@ -289,7 +289,8 @@ fi
 
 if [[ -f "${DOCKER_ARGS_FILEPATH}" ]]; then
     print_info "Using additional Docker run arguments from $DOCKER_ARGS_FILEPATH"
-    readarray -t DOCKER_ARGS_FILE_LINES < $DOCKER_ARGS_FILEPATH
+    readarray -t DOCKER_ARGS_FILE_git submodule update --init --recursive --force
+LINES < $DOCKER_ARGS_FILEPATH
     for arg in "${DOCKER_ARGS_FILE_LINES[@]}"; do
         DOCKER_ARGS+=($(eval "echo $arg | envsubst"))
     done
@@ -306,13 +307,13 @@ docker run -it --rm \
     --ipc=host \
     ${DOCKER_ARGS[@]} \
     -v /etc/localtime:/etc/localtime:ro \
-    -v /home/sbtc-develop/documents_ji/cumotion/isaac_manipulator:/workspaces/cumotion/isaac_manipulator \
-    -v /home/sbtc-develop/documents_ji/cumotion/isaac_ros_cumotion:/workspaces/cumotion/isaac_ros_cumotion \
-    -v /home/sbtc-develop/documents_ji/cumotion/isaac_ros_nvblox:/workspaces/cumotion/isaac_ros_nvblox \
-    -v /home/sbtc-develop/documents_ji/cumotion/ros2_kortex:/workspaces/cumotion/ros2_kortex \
-    -v /home/sbtc-develop/documents_ji/cumotion/install.sh:/workspaces/cumotion/install.sh \
-    -v /home/sbtc-develop/documents_ji/sbtc-battreverse/sbtc-ros2-motion-commanding:/workspaces/cumotion/sbtc-ros2-motion-commanding \
-    -v /home/sbtc-develop/documents_ji/sbtc-battreverse/sbtc-ros2-utilities:/workspaces/cumotion/sbtc-ros2-utilities \
+    -v ../../isaac_manipulator:/workspaces/cumotion/isaac_manipulator \
+    -v ../../isaac_ros_cumotion:/workspaces/cumotion/isaac_ros_cumotion \
+    -v ../../isaac_ros_nvblox:/workspaces/cumotion/isaac_ros_nvblox \
+    -v ../../../franka/ros2_kortex:/workspaces/cumotion/ros2_kortex \
+    -v ../../install.sh:/workspaces/cumotion/install.sh \
+    -v ../../../sbtc-ros2-motion-commanding:/workspaces/cumotion/sbtc-ros2-motion-commanding \
+    -v ../../../sbtc-ros2-utilities:/workspaces/cumotion/sbtc-ros2-utilities \
     --name "$CONTAINER_NAME" \
     --runtime nvidia \
     --entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh \
