@@ -312,6 +312,7 @@ docker run -it --rm \
     -v ../../isaac_ros_nvblox:/workspaces/cumotion/isaac_ros_nvblox \
     -v ../../../franka/ros2_kortex:/workspaces/cumotion/ros2_kortex \
     -v ../../install.sh:/workspaces/cumotion/install.sh \
+    -v ../../run.sh:/workspaces/cumotion/run.sh \
     -v ../../../sbtc-ros2-motion-commanding:/workspaces/cumotion/sbtc-ros2-motion-commanding \
     -v ../../../sbtc-ros2-utilities:/workspaces/cumotion/sbtc-ros2-utilities \
     --name "$CONTAINER_NAME" \
